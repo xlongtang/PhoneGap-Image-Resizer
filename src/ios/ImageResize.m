@@ -17,7 +17,7 @@
 #import "NSData+Base64.h"
 #import "CDVFile.h"
 
-@implementation ImageResize
+@implementation ImageResize 
 
 @synthesize callbackID;
 
@@ -35,6 +35,16 @@
     
     //Load the image
     UIImage *img = [self getImageUsingOptions:options];
+
+    if img.size.width < width + 60 && img.size.height < height + 60) {
+        NSString *imageData = [options objectForKey:@"data"];
+        NSDictionary* result = [NSDictionary dictionaryWithObjects:[NSArray arrayWithObjects:imageData, width, height, nil] forKeys:[NSArray arrayWithObjects: @"filename", @"width", @"height", nil]];
+
+	CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDictionary:result];
+
+        [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
+        return;
+    }
     
     UIImage *scaledImage = nil;
     CGFloat newHeight;
@@ -91,7 +101,22 @@
     if (storeImage) {
         bool written = [self saveImage:scaledImage withOptions:options];
         if (written) {
-            NSDictionary* result = [NSDictionary dictionaryWithObjects:[NSArray arrayWithObjects:filename, newWidthObj, newHeightObj, nil] forKeys:[NSArray arrayWithObjects: @"filename", @"width", @"height", nil]];
+
+          NSString *directory =  [options objectForKey:@"directory"];	  
+	  NSArray *paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
+	  NSString *documentsDirectory = [paths objectAtIndex:0];
+        
+	  NSMutableString* fullFileName;
+	  if (![directory isEqualToString:@""]) {
+            fullFileName = [NSMutableString stringWithString: directory];
+	  } else {
+            fullFileName = [NSMutableString stringWithString: documentsDirectory];
+	  }
+        
+	  [fullFileName appendString:@"/"];
+	  [fullFileName appendString:filename];
+	  
+            NSDictionary* result = [NSDictionary dictionaryWithObjects:[NSArray arrayWithObjects:fullFileName, newWidthObj, newHeightObj, nil] forKeys:[NSArray arrayWithObjects: @"filename", @"width", @"height", nil]];
             pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDictionary:result];
         } else {
             pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR];
@@ -184,6 +209,7 @@
             imageDataObject = UIImagePNGRepresentation(img);
         }
         
+        // TODO: Factor out (repetation)
         NSArray *paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
         NSString *documentsDirectory = [paths objectAtIndex:0];
         
