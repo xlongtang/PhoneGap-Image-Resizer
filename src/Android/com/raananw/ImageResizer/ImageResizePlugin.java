@@ -35,6 +35,7 @@ import android.os.Environment;
 import android.util.Base64;
 import android.util.Log;
 import android.util.DisplayMetrics;
+import android.net.Uri;
 
 public class ImageResizePlugin extends CordovaPlugin {
     public static final String IMAGE_DATA_TYPE_BASE64 = "base64Image";
@@ -104,15 +105,22 @@ public class ImageResizePlugin extends CordovaPlugin {
             }
             return bmp;
         }
+
+        private String getTempDirectoryPath() {
+            File cache = null;
+            // Use internal storage
+            cache = cordova.getActivity().getCacheDir();
+            // Create the cache directory if it doesn't exist
+            cache.mkdirs();
+            return cache.getAbsolutePath();
+        }
         
         protected void storeImage(JSONObject params, String format, Bitmap bmp, CallbackContext callbackContext) throws JSONException, IOException, URISyntaxException {
             int quality = params.getInt("quality");
             String filename = params.getString("filename");
-            URI folderUri = new URI(params.getString("directory"));
-            URI pictureUri = new URI(params.getString("directory") + "/" + filename);
-            File folder = new File(folderUri);
+            File folder = new File(getTempDirectoryPath() + "/" + params.getString("directory"));
             folder.mkdirs();
-            File file = new File(pictureUri);
+            File file = new File(folder, filename);
             OutputStream outStream = new FileOutputStream(file);
             if (format.equals(FORMAT_PNG)) {
                 bmp.compress(Bitmap.CompressFormat.PNG, quality,
@@ -124,7 +132,7 @@ public class ImageResizePlugin extends CordovaPlugin {
             outStream.flush();
             outStream.close();
             JSONObject res = new JSONObject();
-            res.put("filename", filename);
+            res.put("filename", Uri.fromFile(file).toString());            
             res.put("width", bmp.getWidth());
             res.put("height", bmp.getHeight());
             callbackContext.success(res);
@@ -162,6 +170,18 @@ public class ImageResizePlugin extends CordovaPlugin {
         public StoreImage(JSONObject params, CallbackContext callbackContext) throws JSONException {
             super(params, callbackContext);
         }
+
+           private String getTempDirectoryPath() {
+                File cache = null;
+
+                        // Use internal storage
+                           cache = cordova.getActivity().getCacheDir();
+
+                       // Create the cache directory if it doesn't exist
+                          cache.mkdirs();
+                  return cache.getAbsolutePath();
+            }
+
         
         @Override
         public void run() {
@@ -195,6 +215,20 @@ public class ImageResizePlugin extends CordovaPlugin {
                 BitmapFactory.Options options = new BitmapFactory.Options();
                 options.inJustDecodeBounds = true;
                 getBitmap(imageData, imageDataType, options);
+
+                float desiredWidth = (float)params.getDouble("width");
+                float desiredHeight = (float)params.getDouble("height");
+                // There is no need to create thumbnail for small ones
+                if (params.getBoolean("storeImage") &&
+                    options.outWidth < desiredWidth + 60 && options.outHeight < desiredHeight + 60) {
+                    JSONObject res = new JSONObject();
+                    res.put("filename", imageData);
+                    res.put("width", options.outWidth);
+                    res.put("height", options.outHeight);
+                    callbackContext.success(res);
+                    return;
+                }   
+                
                 float[] sizes = calculateFactors(params, options.outWidth, options.outHeight);
                 float reqWidth = options.outWidth * sizes[0];
                 float reqHeight = options.outHeight * sizes[1];
