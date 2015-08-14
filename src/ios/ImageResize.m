@@ -36,7 +36,7 @@
     //Load the image
     UIImage *img = [self getImageUsingOptions:options];
 
-    if img.size.width < width + 60 && img.size.height < height + 60) {
+    if (img.size.width < width + 60 && img.size.height < height + 60) {
         NSString *imageData = [options objectForKey:@"data"];
         NSDictionary* result = [NSDictionary dictionaryWithObjects:[NSArray arrayWithObjects:imageData, width, height, nil] forKeys:[NSArray arrayWithObjects: @"filename", @"width", @"height", nil]];
 
@@ -214,7 +214,7 @@
         NSString *documentsDirectory = [paths objectAtIndex:0];
         
         NSMutableString* fullFileName;
-        if (![directory isEqualToString:@""]) {
+        if (directory != nil && ![directory isEqualToString:@""]) {
             fullFileName = [NSMutableString stringWithString: directory];
             if (![[NSFileManager defaultManager] fileExistsAtPath:fullFileName]) {
                 NSError *error = nil;
