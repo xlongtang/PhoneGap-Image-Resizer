@@ -37,10 +37,14 @@
     UIImage *img = [self getImageUsingOptions:options];
 
     if (img.size.width < width + 60 && img.size.height < height + 60) {
+        
         NSString *imageData = [options objectForKey:@"data"];
-        NSDictionary* result = [NSDictionary dictionaryWithObjects:[NSArray arrayWithObjects:imageData, width, height, nil] forKeys:[NSArray arrayWithObjects: @"filename", @"width", @"height", nil]];
+        NSNumber *newWidthObj = [[NSNumber alloc] initWithFloat:width];
+        NSNumber *newHeightObj = [[NSNumber alloc] initWithFloat:height];
+        
+        NSDictionary* result = [NSDictionary dictionaryWithObjects:[NSArray arrayWithObjects:imageData, newWidthObj, newHeightObj, nil] forKeys:[NSArray arrayWithObjects: @"filename", @"width", @"height", nil]];
 
-	CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDictionary:result];
+    	CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDictionary:result];
 
         [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
         return;
