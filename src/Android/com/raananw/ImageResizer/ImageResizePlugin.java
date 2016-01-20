@@ -118,7 +118,14 @@ public class ImageResizePlugin extends CordovaPlugin {
         protected void storeImage(JSONObject params, String format, Bitmap bmp, CallbackContext callbackContext) throws JSONException, IOException, URISyntaxException {
             int quality = params.getInt("quality");
             String filename = params.getString("filename");
-            File folder = new File(getTempDirectoryPath() + "/" + params.getString("directory"));
+            string directory = params.getString("directory");
+            File folder;
+            if (directory != null && !directory.isEmpty()) {
+                URI folderUri = new URI(directory);
+                folder = new File(folderUri);
+            } else {
+                folder = new File(getTempDirectoryPath());
+            }
             folder.mkdirs();
             File file = new File(folder, filename);
             OutputStream outStream = new FileOutputStream(file);
@@ -171,18 +178,6 @@ public class ImageResizePlugin extends CordovaPlugin {
             super(params, callbackContext);
         }
 
-           private String getTempDirectoryPath() {
-                File cache = null;
-
-                        // Use internal storage
-                           cache = cordova.getActivity().getCacheDir();
-
-                       // Create the cache directory if it doesn't exist
-                          cache.mkdirs();
-                  return cache.getAbsolutePath();
-            }
-
-        
         @Override
         public void run() {
             try {
