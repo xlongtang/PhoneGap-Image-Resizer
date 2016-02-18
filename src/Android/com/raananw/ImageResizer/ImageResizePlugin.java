@@ -118,7 +118,7 @@ public class ImageResizePlugin extends CordovaPlugin {
         protected void storeImage(JSONObject params, String format, Bitmap bmp, CallbackContext callbackContext) throws JSONException, IOException, URISyntaxException {
             int quality = params.getInt("quality");
             String filename = params.getString("filename");
-            string directory = params.getString("directory");
+            String directory = params.getString("directory");
             File folder;
             if (directory != null && !directory.isEmpty()) {
                 URI folderUri = new URI(directory);
